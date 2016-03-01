@@ -1,6 +1,7 @@
 source 'https://rubygems.org'
 
-
-
-gem "test-kitchen"
-gem "kitchen-vagrant"
+gem 'kitchen-vagrant'
+gem 'test-kitchen'
+gem 'foodcritic'
+gem 'overcommit'
+gem 'rubocop'
