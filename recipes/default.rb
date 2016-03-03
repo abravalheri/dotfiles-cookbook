@@ -17,19 +17,23 @@ end
 
 # Directories to be created recursively
 dirs = (
-  %w(bash tmux git).map { |d| ".config/#{d}" }
+  %w(bash tmux git vim).map { |d| ".config/#{d}" }
+  %w(undo swap backup).map { |d| ".cache/vim/#{d}" } +
+  %w(.vim/plugins)
 )
 
 # Dotfiles to be copied int the format: src => dest
 dotfiles = {
   'bash/bashrc' => '.bashrc',
   'tmux/tmux.conf' => '.tmux.conf',
-  'git/config' => '.config/git/config'
+  'git/config' => '.config/git/config',
+  'vim/vimrc' => '.vim/vimrc'
 }
 
 config_files = (
   %w(bash/git-prompt.sh) +
   %w(style clipboard).map { |f| "tmux/#{f}.tmux" }
+  %w(main extras plugins tmuxline).map { |f| "vim/#{f}.vim" }
 )
 
 dotfiles.merge!(Hash[config_files.map { |f| [f, ".config/#{f}"] }])
@@ -57,5 +61,36 @@ users.each do |username, data|
       group gid
       mode PERMISSIONS
     end
+  end
+
+  # Install Vundle
+  git(File.expand_path('.vim/plugins/Vundle.vim', home)) do
+    repository 'https://github.com/VundleVim/Vundle.vim'
+    revision 'master'
+    action :sync
+    group gid
+    user username
+  end
+
+  execute "install #{username} vim plugins" do
+    user username
+    group gid
+    cwd home
+
+    environment(
+      'HOME' => home,
+      'VIMFILES' => "#{home}/.vim",
+      'CONFIG_HOME' => "#{home}/.config",
+      'CACHE_HOME' => "#{home}/.cache"
+    )
+
+    command %W(
+      vim -E -s
+      -c "source #{home}/.vim/vimrc"
+      -c "set shortmess=at"
+      -c "PluginInstall"
+      -c "qa!"
+      -V 2>&1 | cat
+    ).join(' ')
   end
 end
