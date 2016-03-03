@@ -17,13 +17,14 @@ end
 
 # Directories to be created recursively
 dirs = (
-  %w(bash tmux).map { |d| ".config/#{d}" }
+  %w(bash tmux git).map { |d| ".config/#{d}" }
 )
 
 # Dotfiles to be copied int the format: src => dest
 dotfiles = {
   'bash/bashrc' => '.bashrc',
-  'tmux/tmux.conf' => '.tmux.conf'
+  'tmux/tmux.conf' => '.tmux.conf',
+  'git/config' => '.config/git/config'
 }
 
 config_files = (
