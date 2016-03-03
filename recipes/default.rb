@@ -22,7 +22,8 @@ dirs = (
 
 # Dotfiles to be copied int the format: src => dest
 dotfiles = {
-  'bash/bashrc' => '.bashrc'
+  'bash/bashrc' => '.bashrc',
+  'tmux/tmux.conf' => '.tmux.conf'
 }
 
 config_files = %w(
