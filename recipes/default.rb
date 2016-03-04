@@ -17,7 +17,7 @@ end
 
 # Directories to be created recursively
 dirs = (
-  %w(bash).map { |d| ".config/#{d}" }
+  %w(bash tmux).map { |d| ".config/#{d}" }
 )
 
 # Dotfiles to be copied int the format: src => dest
@@ -26,8 +26,9 @@ dotfiles = {
   'tmux/tmux.conf' => '.tmux.conf'
 }
 
-config_files = %w(
-  bash/git-prompt.sh
+config_files = (
+  %w(bash/git-prompt.sh) +
+  %w(style clipboard).map { |f| "tmux/#{f}.tmux" }
 )
 
 dotfiles.merge!(Hash[config_files.map { |f| [f, ".config/#{f}"] }])
