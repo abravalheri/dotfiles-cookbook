@@ -17,7 +17,7 @@ end
 
 # Directories to be created recursively
 dirs = (
-  %w(bash tmux git vim).map { |d| ".config/#{d}" }
+  %w(bash tmux git vim).map { |d| ".config/#{d}" } +
   %w(undo swap backup).map { |d| ".cache/vim/#{d}" } +
   %w(.vim/plugins)
 )
@@ -32,7 +32,7 @@ dotfiles = {
 
 config_files = (
   %w(bash/git-prompt.sh) +
-  %w(style clipboard).map { |f| "tmux/#{f}.tmux" }
+  %w(style clipboard).map { |f| "tmux/#{f}.tmux" } +
   %w(main extras plugins tmuxline).map { |f| "vim/#{f}.vim" }
 )
 
@@ -79,7 +79,7 @@ users.each do |username, data|
 
     environment(
       'HOME' => home,
-      'VIMFILES' => "#{home}/.vim",
+      'VIMDIR' => "#{home}/.vim",
       'CONFIG_HOME' => "#{home}/.config",
       'CACHE_HOME' => "#{home}/.cache"
     )

@@ -8,7 +8,7 @@ set nocompatible              " be iMproved, required
 filetype off                  " required for plugins
 
 " default tabs before plugins
-set tabstop 8
+set tabstop=8
 set shiftwidth=2
 
 " allow backspacing over everything in insert mode
