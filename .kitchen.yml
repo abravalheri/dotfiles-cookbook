@@ -19,6 +19,7 @@ suites:
     run_list:
       - recipe[tmux::default]
       - recipe[git::default]
+      - recipe[vim]
       - recipe[dotfiles::default]
     attributes:
       tmux:
