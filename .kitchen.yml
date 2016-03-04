@@ -18,4 +18,11 @@ suites:
   - name: default
     run_list:
       - recipe[dotfiles::default]
+      - recipe[tmux::default]
     attributes:
+      tmux:
+        version: 2.1
+        checksum: 31564e7bf4bcef2defb3cb34b9e596bd43a3937cad9e5438701a81a5a9af6176
+        install_method: source
+        session_opts:
+          prefix: C-b
