@@ -4,16 +4,18 @@
 #
 # Copyright (c) 2016 Anderson Bravalheri, All Rights Reserved.
 
-PERMISSIONS = '0644'.freeze
+PERMISSIONS = '0755'.freeze
 
 # Select normal user home directories
 # information node['etc']['passwd'] is grabbed by Ohio
-users = node['etc']['passwd'].select { |_, u| u['uid'].to_i > 1000 }
+users = node['etc']['passwd'].select do |_, u|
+  u['dir'].match(%r{^/home/}ui) && !u['shell'].match(/null|false|nologin/ui)
+end
 
 # If wanted /etc/skel support can be added with root
 # users['root'] = { 'dir' => '/etc/skel', 'gid' => 'root' }
 
-# Directories to be created
+# Directories to be created recursively
 dirs = (
   %w(bash).map { |d| ".config/#{d}" }
 )
@@ -37,7 +39,6 @@ users.each do |username, data|
   # Create config dirs
   dirs.each do |dir|
     directory(File.expand_path(dir, home)) do
-      source src
       owner username
       group gid
       mode PERMISSIONS
@@ -52,7 +53,6 @@ users.each do |username, data|
       owner username
       group gid
       mode PERMISSIONS
-      action :create_if_missing
     end
   end
 end

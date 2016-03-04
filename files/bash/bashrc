@@ -83,7 +83,7 @@ else
 fi
 unset color_prompt force_color_prompt
 
-if [ -f $CONFIG_HOME/bash/git-prompt.sh ]; then
+if command -v git &>/dev/null && [ -f $CONFIG_HOME/bash/git-prompt.sh ]; then
   . $CONFIG_HOME/bash/git-prompt.sh
   PROMPT_COMMAND="__git_ps1 '${debian_chroot:+($debian_chroot)}$LASTEXIT$BEFORE_PS' '\\$ '"
 else
@@ -144,10 +144,16 @@ if ! shopt -oq posix; then
   fi
 fi
 
-alias tmux='tmux -2'
-alias tm='tmux -2 new-session -A -n main'
-if [ -z $TMUX ]; then
-  tm
+# which ignores previous aliases but is not portable
+# command does not ignore aliases, but is built in
+# so it's better to try to check first with which and fallback to command
+if (which tmux &>/dev/null || command -v tmux &>/dev/null); then
+  alias tmux='tmux -2'
+  alias tm='tmux -2 new-session -A -s main'
+
+  if [ -z $TMUX ]; then
+    tmux -2 new-session -A -s main
+  fi
 fi
 
 if [ -f $CONFIG_HOME/bash/extras ]; then
