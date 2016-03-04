@@ -3,9 +3,8 @@
 @test "vim plugins installed" {
   export HOME=/home/vagrant
   export CONFIG_HOME=$HOME/.config
-  export VIMDIR=$HOME/.vim
-  export CONFIG_HOME=$HOME/.config
   export CACHE_HOME=$HOME/.cache
+  export VIMDIR=$HOME/.vim
 
   vim -E -s \
     -c "source $VIMDIR/vimrc" \
