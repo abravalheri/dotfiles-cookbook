@@ -17,8 +17,9 @@ platforms:
 suites:
   - name: default
     run_list:
-      - recipe[dotfiles::default]
       - recipe[tmux::default]
+      - recipe[git::default]
+      - recipe[dotfiles::default]
     attributes:
       tmux:
         version: 2.1
