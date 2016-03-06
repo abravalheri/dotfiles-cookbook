@@ -84,10 +84,16 @@ fi
 unset color_prompt force_color_prompt
 
 if command -v git &>/dev/null && [ -f $CONFIG_HOME/bash/git-prompt.sh ]; then
+  export GIT_PS1_HIDE_IF_PWD_IGNORED=true
+  export GIT_PS1_SHOWDIRTYSTATE=true
+  export GIT_PS1_SHOWUNTRACKEDFILES=true
+  export GIT_PS1_DESCRIBE_STYLE=branch
+
   . $CONFIG_HOME/bash/git-prompt.sh
+
   PROMPT_COMMAND="__git_ps1 '${debian_chroot:+($debian_chroot)}$LASTEXIT$BEFORE_PS' '\\$ '"
 else
-  PS1="${debian_chroot:+($debian_chroot)}$BEFORE_PS\\$ "
+  PS1="${debian_chroot:+($debian_chroot)}$LASTEXIT$BEFORE_PS\\$ "
 fi
 
 # If this is an xterm set the title to user@host:dir

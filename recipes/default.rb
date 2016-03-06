@@ -36,7 +36,6 @@ dotfiles = {
 }
 
 config_files = (
-  %w(bash/git-prompt.sh) +
   %w(style clipboard).map { |f| "tmux/#{f}.tmux" } +
   %w(main extras plugins tmuxline).map { |f| "vim/#{f}.vim" }
 )
@@ -66,6 +65,16 @@ users.each do |username, data|
       group gid
       mode PERMISSIONS
     end
+  end
+
+  # Display git info in prompt
+  remote_file File.expand_path(".config/bash/git-prompt.sh", home) do
+    source <<-EOS.strip
+      https://github.com/git/git/raw/master/contrib/completion/git-prompt.sh
+    EOS
+    owner username
+    group gid
+    mode PERMISSIONS
   end
 
   # Install Vundle
