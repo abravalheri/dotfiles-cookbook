@@ -9,102 +9,118 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+include_recipe 'locale'
+
 PERMISSIONS = '0755'.freeze
+DOTFILES_DIR = '.config/dotfiles'.freeze
+DOTFILES_REPO = 'https://github.com/abravalheri/dotfiles'.freeze
+REQUIRED_DIRS = ['.config'].freeze # Required directories
+LOCAL_DOTFILES = %w(+local.vim).freeze
+#  ^ For simplicity let"s use the binary name as extension and as folder
+LINKS = {
+  '.zshrc' => 'zsh/init.zsh',
+  "#{DOTFILES_DIR}/vim/vimrc" => 'vim/init.vim',
+  '.config/nvim' => 'vim',
+  '.config/vim' => 'vim',
+  '.vim' => 'vim',
+  '.config/git' => 'git',
+  '.tmux.conf' => 'tmux/init.tmux'
+}.freeze
+# ^ target => original hash map.
+#   The target is relative to home, while the original is relative to
+#   dotfiles directory
+
+package %w(zsh python)
+
+# Ensure user data is updated
+ohai('reload') { action :reload }
 
 # Select normal user home directories
-# information node['etc']['passwd'] is grabbed by Ohio
+# information node["etc"]["passwd"] is grabbed by Ohio
 users = node['etc']['passwd'].select do |_, u|
   u['dir'].match(%r{^/home/}ui) && !u['shell'].match(/null|false|nologin/ui)
 end
 
 # If wanted /etc/skel support can be added with root
-# users['root'] = { 'dir' => '/etc/skel', 'gid' => 'root' }
+# users["root"] = { "dir" => "/etc/skel", "gid" => "root" }
 
-# Directories to be created recursively
-dirs = (
-  %w(bash tmux git vim).map { |d| ".config/#{d}" } +
-  %w(undo swap backup).map { |d| ".cache/vim/#{d}" } +
-  %w(.vim/plugins)
-)
+# Helpers
+home_path_ = ->(home, path) { File.expand_path(path, home) }.curry
 
-# Dotfiles to be copied int the format: src => dest
-dotfiles = {
-  'bash/bashrc' => '.bashrc',
-  'tmux/tmux.conf' => '.tmux.conf',
-  'git/config' => '.config/git/config',
-  'vim/vimrc' => '.vim/vimrc'
-}
+dotfiles_path_ = lambda do |home, path|
+  File.expand_path(path, home_path_[home, DOTFILES_DIR])
+end.curry
 
-config_files = (
-  %w(style clipboard).map { |f| "tmux/#{f}.tmux" } +
-  %w(main extras plugins tmuxline).map { |f| "vim/#{f}.vim" }
-)
+git_clone_ = lambda do |username, gid, dest, repo, rev|
+  git(dest) do
+    repository repo
+    revision rev
+    enable_submodules true
+    action :sync
+    group gid
+    user username
+  end
+end.curry
 
-dotfiles.merge!(Hash[config_files.map { |f| [f, ".config/#{f}"] }])
+copy_file_ = lambda do |username, gid, src, dest|
+  cookbook_file(dest) do
+    source src
+    owner username
+    group gid
+    mode PERMISSIONS
+  end
+end.curry
+
+ensure_dir_ = lambda do |username, gid, path|
+  directory(path) do
+    owner username
+    group gid
+    mode PERMISSIONS
+    recursive true
+  end
+end.curry
+
+ensure_link_ = lambda do |username, gid, home, dest, src|
+  link(home_path_[home, dest]) do
+    to dotfiles_path_[home, src]
+    owner username
+    group gid
+    mode PERMISSIONS
+    link_type :symbolic
+  end
+end.curry
 
 # Apply dotfiles
 users.each do |username, data|
   home = data['dir']
   gid = data['gid']
 
+  home_path = home_path_.call(home)
+  dotfiles_path = dotfiles_path_.call(home)
+  git_clone = git_clone_.call(username, gid)
+  copy_file = copy_file_.call(username, gid)
+  ensure_dir = ensure_dir_.call(username, gid)
+  ensure_link = ensure_link_.call(username, gid, home)
+
   # Create config dirs
-  dirs.each do |dir|
-    directory(File.expand_path(dir, home)) do
-      owner username
-      group gid
-      mode PERMISSIONS
-      recursive true
-    end
+  REQUIRED_DIRS.each { |dir| ensure_dir[home_path[dir]] }
+
+  # Install dotfiles from separated repository
+  git_clone[dotfiles_path['.'], DOTFILES_REPO, 'master']
+
+  # Copy deviant dotfiles
+  LOCAL_DOTFILES.each do |src|
+    ext = File.extname(src).gsub(/^\./, '')
+    dest = dotfiles_path["#{ext}/#{src}"]
+    copy_file[src, dest]
   end
 
-  # Copy dotfiles
-  dotfiles.each do |src, dest|
-    cookbook_file(File.expand_path(dest, home)) do
-      source src
-      owner username
-      group gid
-      mode PERMISSIONS
-    end
-  end
+  # Ensure correct rights to dotfiles
+  ensure_dir[dotfiles_path['.']]
 
-  # Display git info in prompt
-  remote_file File.expand_path(".config/bash/git-prompt.sh", home) do
-    source <<-EOS.strip
-      https://github.com/git/git/raw/master/contrib/completion/git-prompt.sh
-    EOS
-    owner username
-    group gid
-    mode PERMISSIONS
-  end
+  # Change shell to zsh
+  user(username) { shell '/bin/zsh' }
 
-  # Install Vundle
-  git(File.expand_path('.vim/plugins/Vundle.vim', home)) do
-    repository 'https://github.com/VundleVim/Vundle.vim'
-    revision 'master'
-    action :sync
-    group gid
-    user username
-  end
-
-  execute "install #{username} vim plugins" do
-    user username
-    group gid
-    cwd home
-
-    environment(
-      'HOME' => home,
-      'VIMDIR' => "#{home}/.vim",
-      'CONFIG_HOME' => "#{home}/.config",
-      'CACHE_HOME' => "#{home}/.cache"
-    )
-
-    command %W(
-      vim -E -s
-      -c "source #{home}/.vim/vimrc"
-      -c "set shortmess=at"
-      -c "PluginInstall"
-      -c "qa!"
-      -V 2>&1 | cat
-    ).join(' ')
-  end
+  # Ensure dotfiles linked correctly
+  LINKS.each { |dest, src| ensure_link[dest, src] }
 end

@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 
-gem 'kitchen-vagrant'
-gem 'test-kitchen'
 gem 'foodcritic'
+gem 'kitchen-docker'
 gem 'overcommit'
 gem 'rubocop'
+gem 'test-kitchen'

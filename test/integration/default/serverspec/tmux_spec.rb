@@ -12,6 +12,8 @@ end
 
 describe file('/home/vagrant/.tmux.conf') do
   its(:content) do
-    should include 'source-file $CONFIG_HOME/tmux/style.tmux'
+    should include 'bind R source-file'
+    should include 'tmux reloaded!'
+    should include 'tmux source-file "$DOTFILES/tmux/style/$TMUX_STYLE.tmux'
   end
 end

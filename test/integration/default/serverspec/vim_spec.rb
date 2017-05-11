@@ -4,9 +4,9 @@ require 'spec_helper'
 # including a Vundle installed plugin
 %w(
   .vim
-  .vim/plugins
-  .vim/plugins/Vundle.vim
-  .vim/plugins/vimux
+  .vim/autoload
+  .vim/+plugins
+  .vim/+plugins/vimux
   .config/vim
 ).each do |d|
   describe file("/home/vagrant/#{d}") do
@@ -14,7 +14,7 @@ require 'spec_helper'
   end
 end
 
-%w(main extras plugins tmuxline).each do |f|
+%w(init extras plugins style).each do |f|
   describe file("/home/vagrant/.config/vim/#{f}.vim") do
     it { should be_file }
   end

@@ -1,31 +1,32 @@
 ---
 driver:
-  name: vagrant
+  name: docker
+  use_sudo: false
 
 provisioner:
   name: chef_zero
 
 platforms:
-  - name: debian-8.2
+  - name: ubuntu-16.04
     run_list:
       - recipe[apt] # update package index
-  - name: ubuntu-14.04
-    run_list:
-      - recipe[apt] # update package index
-    run_list:
-  - name: centos-7.2
+      - recipe[tmux]
+      - recipe[git]
+      - recipe[vim]
+      - recipe[user::data_bag]
+    data_bags_path: test/integration/data_bags
+    attributes:
+      users:
+        - brock
+        - misty
+      tmux:
+        version: 2.4
+        checksum: 757d6b13231d0d9dd48404968fc114ac09e005d475705ad0cd4b7166f799b349
+        install_method: source
+        session_opts:
+          prefix: C-b
 
 suites:
   - name: default
     run_list:
-      - recipe[tmux]
-      - recipe[git]
-      - recipe[vim]
       - recipe[dotfiles]
-    attributes:
-      tmux:
-        version: 2.1
-        checksum: 31564e7bf4bcef2defb3cb34b9e596bd43a3937cad9e5438701a81a5a9af6176
-        install_method: source
-        session_opts:
-          prefix: C-b

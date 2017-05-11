@@ -11,6 +11,10 @@ issues_url 'https://github.com/abravalheri/dotfiles-cookbook/issues'
 description 'Resources for installing dotfiles from git repos using chef'
 long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
 
+chef_version '~> 13'
+
+depends 'locale', '~> 2.0.1'
+
 supports 'ubuntu'
 supports 'debian'
 supports 'centos'
