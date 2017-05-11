@@ -9,26 +9,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# This recipe assumes the dotfiles are organized in a single folder `dotfiles`
+# inside the `$XDG_CONFIG_DIR` and a
+# [dotbot](https://github.com/anishathalye/dotbot) script is used to
+# link the files to the correct location.
+
 include_recipe 'locale'
 
 PERMISSIONS = '0755'.freeze
 DOTFILES_DIR = '.config/dotfiles'.freeze
 DOTFILES_REPO = 'https://github.com/abravalheri/dotfiles'.freeze
+DOTBOT_CONFIG = 'install.conf.yaml'.freeze
 REQUIRED_DIRS = ['.config'].freeze # Required directories
 LOCAL_DOTFILES = %w(+local.vim).freeze
 #  ^ For simplicity let"s use the binary name as extension and as folder
-LINKS = {
-  '.zshrc' => 'zsh/init.zsh',
-  "#{DOTFILES_DIR}/vim/vimrc" => 'vim/init.vim',
-  '.config/nvim' => 'vim',
-  '.config/vim' => 'vim',
-  '.vim' => 'vim',
-  '.config/git' => 'git',
-  '.tmux.conf' => 'tmux/init.tmux'
-}.freeze
-# ^ target => original hash map.
-#   The target is relative to home, while the original is relative to
-#   dotfiles directory
 
 package %w(zsh python)
 
@@ -90,17 +84,47 @@ ensure_link_ = lambda do |username, gid, home, dest, src|
   end
 end.curry
 
+# rubocop:disable Style/PerlBackrefs
+find_dotbot_links = lambda do |home, iterator|
+  # Search for a `instal.conf.yaml` file in the `<path>` directory,
+  # and return the links described by it.
+  # This file should follow the
+  # [dotbot convention](https://github.com/anishathalye/dotbot).
+
+  ruby_block 'find dotfiles links' do
+    block do
+      require 'yaml'
+
+      expand_env = lambda do |str|
+        str.gsub(/\$([a-zA-Z_]+[a-zA-Z0-9_]*)|\$\{(.+)\}/) { ENV[$1 || $2] }
+      end
+
+      path = File.expand_path(DOTFILES_DIR, home)
+      config = YAML.load_file(File.expand_path(DOTBOT_CONFIG, path))
+      links = config.inject(&:merge)['link']
+
+      ENV['HOME'] = home
+      ENV['DOTFILES'] = path
+
+      links.each do |dest, src|
+        iterator.call(expand_env[dest], expand_env[src])
+      end
+    end
+  end
+end
+# rubocop:enable Style/PerlBackrefs
+
 # Apply dotfiles
 users.each do |username, data|
   home = data['dir']
   gid = data['gid']
 
-  home_path = home_path_.call(home)
-  dotfiles_path = dotfiles_path_.call(home)
-  git_clone = git_clone_.call(username, gid)
-  copy_file = copy_file_.call(username, gid)
-  ensure_dir = ensure_dir_.call(username, gid)
-  ensure_link = ensure_link_.call(username, gid, home)
+  home_path = home_path_[home]
+  dotfiles_path = dotfiles_path_[home]
+  git_clone = git_clone_[username, gid]
+  copy_file = copy_file_[username, gid]
+  ensure_dir = ensure_dir_[username, gid]
+  ensure_link = ensure_link_[username, gid, home]
 
   # Create config dirs
   REQUIRED_DIRS.each { |dir| ensure_dir[home_path[dir]] }
@@ -122,5 +146,5 @@ users.each do |username, data|
   user(username) { shell '/bin/zsh' }
 
   # Ensure dotfiles linked correctly
-  LINKS.each { |dest, src| ensure_link[dest, src] }
+  find_dotbot_links[home, ensure_link]
 end
