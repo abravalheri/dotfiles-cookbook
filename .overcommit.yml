@@ -14,7 +14,6 @@
 # https://github.com/brigade/overcommit#configuration
 #
 # Uncomment the following lines to make the configuration take effect.
-
 PreCommit:
   RuboCop:
     enabled: true

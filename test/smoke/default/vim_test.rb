@@ -1,7 +1,3 @@
-require 'spec_helper'
-
-# check directories that should exist
-# including a Vundle installed plugin
 %w(
   .vim
   .vim/autoload

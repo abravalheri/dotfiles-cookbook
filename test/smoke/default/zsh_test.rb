@@ -1,5 +1,3 @@
-require 'spec_helper'
-
 describe file('/home/vagrant/.zshrc') do
   its(:content) do
     should include '${XDG_CONFIG_HOME:=$HOME/.config}'

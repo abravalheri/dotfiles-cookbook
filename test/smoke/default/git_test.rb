@@ -1,5 +1,3 @@
-require 'spec_helper'
-
 describe file('/home/vagrant/.config/git') do
   it { should be_directory }
 end

@@ -6,27 +6,23 @@ driver:
 provisioner:
   name: chef_zero
 
+verifier:
+  name: inspec
+
 platforms:
   - name: ubuntu-16.04
     run_list:
-      - recipe[apt] # update package index
-      - recipe[tmux]
-      - recipe[git]
-      - recipe[vim]
       - recipe[user::data_bag]
     data_bags_path: test/integration/data_bags
     attributes:
       users:
         - brock
         - misty
-      tmux:
-        version: 2.4
-        checksum: 757d6b13231d0d9dd48404968fc114ac09e005d475705ad0cd4b7166f799b349
-        install_method: source
-        session_opts:
-          prefix: C-b
 
 suites:
   - name: default
     run_list:
       - recipe[dotfiles]
+    verifier:
+      inspec_tests:
+        - test/smoke/default
