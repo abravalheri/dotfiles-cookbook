@@ -24,5 +24,6 @@ python_runtime '2'
 python_runtime '3'
 
 python_package 'thefuck'
+python_package 'vint'
 
 package 'xclip'
